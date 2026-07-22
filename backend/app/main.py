@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Starting Tracewell API")
     await connect_to_mongo()
-    yield
-    await close_mongo_connection()
-    logger.info("Stopped Tracewell API")
+    try:
+        yield
+    finally:
+        await close_mongo_connection()
+        logger.info("Stopped Tracewell API")
 
 
 def create_app() -> FastAPI:

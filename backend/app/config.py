@@ -15,6 +15,10 @@ class Settings(BaseSettings):
         alias="TRACEWELL_MONGODB_URI",
     )
     mongodb_database: str = Field(default="tracewell", alias="TRACEWELL_MONGODB_DATABASE")
+    mongodb_server_selection_timeout_ms: int = Field(
+        default=5_000,
+        alias="TRACEWELL_MONGODB_SERVER_SELECTION_TIMEOUT_MS",
+    )
     cors_origins_raw: str = Field(
         default="http://localhost:5173",
         alias="TRACEWELL_CORS_ORIGINS",

@@ -1,27 +1,72 @@
+import logging
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from app.config import settings
 
 
-class MongoState:
-    client: AsyncIOMotorClient | None = None
+logger = logging.getLogger(__name__)
 
 
-mongo_state = MongoState()
+class MongoClientManager:
+    def __init__(self) -> None:
+        self._client: AsyncIOMotorClient | None = None
+
+    @property
+    def client(self) -> AsyncIOMotorClient:
+        if self._client is None:
+            raise RuntimeError("MongoDB client is not initialized")
+
+        return self._client
+
+    @property
+    def database(self) -> AsyncIOMotorDatabase:
+        return self.client[settings.mongodb_database]
+
+    async def connect(self) -> None:
+        if self._client is not None:
+            return
+
+        client = AsyncIOMotorClient(
+            settings.mongodb_uri,
+            serverSelectionTimeoutMS=settings.mongodb_server_selection_timeout_ms,
+        )
+        try:
+            await client.admin.command("ping")
+        except Exception:
+            client.close()
+            logger.exception("Failed to connect to MongoDB")
+            raise
+
+        self._client = client
+        logger.info(
+            "Connected to MongoDB",
+            extra={"database": settings.mongodb_database},
+        )
+
+    async def close(self) -> None:
+        if self._client is None:
+            return
+
+        self._client.close()
+        self._client = None
+        logger.info("Closed MongoDB connection")
+
+
+mongo_client_manager = MongoClientManager()
 
 
 async def connect_to_mongo() -> None:
-    mongo_state.client = AsyncIOMotorClient(settings.mongodb_uri)
+    await mongo_client_manager.connect()
 
 
 async def close_mongo_connection() -> None:
-    if mongo_state.client is not None:
-        mongo_state.client.close()
-        mongo_state.client = None
+    await mongo_client_manager.close()
+
+
+def get_mongo_client() -> AsyncIOMotorClient:
+    return mongo_client_manager.client
 
 
 def get_database() -> AsyncIOMotorDatabase:
-    if mongo_state.client is None:
-        raise RuntimeError("MongoDB client is not initialized")
-
-    return mongo_state.client[settings.mongodb_database]
+    return mongo_client_manager.database
