@@ -10,6 +10,31 @@
   background: #f8fafc;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-edge-stroke-default: #0f766e;
+  --xy-controls-button-background-color-default: #ffffff;
+  --xy-controls-button-background-color-hover-default: #f8fafc;
+  --xy-controls-button-color-default: #334155;
+  --xy-controls-button-border-color-default: #e2e8f0;
+}
+
+.dark .react-flow {
+  --xy-controls-button-background-color-default: #020617;
+  --xy-controls-button-background-color-hover-default: #0f172a;
+  --xy-controls-button-color-default: #e2e8f0;
+  --xy-controls-button-border-color-default: #1e293b;
 }

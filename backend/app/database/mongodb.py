@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class MongoClientManager:
     def __init__(self) -> None:
-        self._client: AsyncIOMotorClient | None = None
+        self._client: Optional[AsyncIOMotorClient] = None
 
     @property
     def client(self) -> AsyncIOMotorClient:
@@ -30,6 +31,7 @@ class MongoClientManager:
         client = AsyncIOMotorClient(
             settings.mongodb_uri,
             serverSelectionTimeoutMS=settings.mongodb_server_selection_timeout_ms,
+            tz_aware=True,
         )
         try:
             await client.admin.command("ping")

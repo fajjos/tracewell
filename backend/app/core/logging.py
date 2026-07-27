@@ -1,7 +1,7 @@
 import json
 import logging
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from logging.config import dictConfig
 from typing import Any
 
@@ -15,7 +15,7 @@ RESERVED_LOG_RECORD_FIELDS = set(logging.makeLogRecord({}).__dict__) | {
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
