@@ -1,11 +1,10 @@
-from datetime import UTC, datetime
-from enum import StrEnum
-from typing import Self
+from datetime import datetime, timezone
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-class TraceStatus(StrEnum):
+class TraceStatus(str, Enum):
     SUCCESS = "success"
     ERROR = "error"
 
@@ -40,7 +39,7 @@ class TracePayload(BaseModel):
     cost: float = Field(default=0.0, ge=0, allow_inf_nan=False)
     status: TraceStatus = TraceStatus.SUCCESS
     tool_calls: list[TraceToolCall] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     model_config = ConfigDict(extra="forbid")
 
@@ -69,7 +68,7 @@ class TracePayload(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_total_tokens(self) -> Self:
+    def validate_total_tokens(self) -> "TracePayload":
         expected_total = self.input_tokens + self.output_tokens
         if self.total_tokens == 0 and expected_total > 0:
             self.total_tokens = expected_total

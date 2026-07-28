@@ -7,7 +7,7 @@ name = "tracewell"
 version = "0.1.0"
 description = "Python SDK for Tracewell AI agent observability."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 dependencies = [
   "httpx>=0.28.1",
   "pydantic>=2.11.7",

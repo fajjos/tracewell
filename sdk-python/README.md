@@ -61,7 +61,7 @@ export TRACEWELL_PROJECT_ID=support-agent
 
 ```python
 Tracewell(
-    api_key: str | None = None,
+    api_key: Optional[str] = None,
     base_url: str = "http://localhost:8000",
     project_id: str = "default",
     timeout: float = 5.0,

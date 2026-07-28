@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from os import getenv
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 import httpx
@@ -19,7 +20,7 @@ def _new_session_id() -> str:
 
 @dataclass
 class Tracewell:
-    api_key: str | None = field(default_factory=lambda: getenv("TRACEWELL_API_KEY"))
+    api_key: Optional[str] = field(default_factory=lambda: getenv("TRACEWELL_API_KEY"))
     base_url: str = field(
         default_factory=lambda: getenv("TRACEWELL_BASE_URL", "http://localhost:8000")
     )
@@ -39,14 +40,14 @@ class Tracewell:
         model: str = "unknown",
         input_tokens: int = 0,
         output_tokens: int = 0,
-        total_tokens: int | None = None,
+        total_tokens: Optional[int] = None,
         cost: float = 0.0,
-        status: TraceStatus | str = TraceStatus.SUCCESS,
-        tool_calls: list[dict[str, object]] | None = None,
-        project_id: str | None = None,
-        session_id: str | None = None,
-        trace_id: str | None = None,
-        created_at: datetime | None = None,
+        status: Union[TraceStatus, str] = TraceStatus.SUCCESS,
+        tool_calls: Optional[List[Dict[str, object]]] = None,
+        project_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+        trace_id: Optional[str] = None,
+        created_at: Optional[datetime] = None,
     ) -> TraceResult:
         payload = TracePayload(
             trace_id=trace_id or _new_trace_id(),
@@ -65,7 +66,7 @@ class Tracewell:
             cost=cost,
             status=status,
             tool_calls=tool_calls or [],
-            created_at=created_at or datetime.now(UTC),
+            created_at=created_at or datetime.now(timezone.utc),
         )
 
         return self._send_trace(payload)
