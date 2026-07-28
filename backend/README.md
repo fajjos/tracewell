@@ -28,8 +28,24 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
+## Seed Demo Data
+
+With MongoDB and the backend running:
+
+```powershell
+python scripts\seed_demo_traces.py
+```
+
+The script sends realistic traces through `POST /api/v1/traces`, including success, failure, high-latency, high-token, and repeated-tool-call examples.
+
 ## Environment Variables
 
 Create a `.env` file from `.env.example`.
 
-No product APIs are implemented yet. This package currently contains only the application structure and shared infrastructure placeholders.
+## Implemented Endpoints
+
+- `GET /`
+- `GET /health`
+- `POST /api/v1/traces`
+- `GET /api/v1/traces`
+- `GET /api/v1/traces/{trace_id}`

@@ -22,7 +22,7 @@ The first version is intentionally small: one SDK, one API, one database, one da
 ## Tech Stack
 
 - Frontend: React, Vite, TailwindCSS, React Router
-- Backend: FastAPI, Python 3.12, Pydantic v2, Motor, Uvicorn
+- Backend: FastAPI, Python 3.9+, Pydantic v2, Motor, Uvicorn
 - Database: MongoDB
 - SDK: Python package
 
@@ -42,6 +42,7 @@ tracewell/
 |   |   |-- config.py   Environment-driven settings
 |   |   `-- main.py     FastAPI app factory
 |   |-- requirements.txt
+|   |-- scripts/        Local developer and demo scripts
 |   `-- README.md
 |-- frontend/          React dashboard application
 |-- sdk-python/        Python SDK package
@@ -54,6 +55,8 @@ tracewell/
 ```
 
 ## Local Setup
+
+For the fastest end-to-end demo, see [Local Demo](./docs/local-demo.md).
 
 ### Backend
 
@@ -115,31 +118,33 @@ pip install -e .
 
 ## Current Development Status
 
-Tracewell is pre-alpha. The repository is scaffolded for the MVP, but ingestion APIs, SDK transport, trace persistence, and dashboard views are not implemented yet.
+Tracewell is pre-alpha, but the core MVP loop is working locally.
 
 Current scope:
 
-- Monorepo structure is in place.
-- Backend application shell is in place.
-- Frontend application shell is in place.
-- Python SDK package shell is in place.
-- Product APIs are intentionally not implemented yet.
+- Python SDK can send traces to the backend.
+- FastAPI exposes health, trace ingestion, and trace retrieval endpoints.
+- MongoDB stores trace data.
+- Rule-based failure detection flags high latency, high token usage, failed responses, and repeated tool calls.
+- React dashboard displays metrics, recent traces, failures, trace details, and a React Flow trace viewer.
+- A local demo seed script is available at `backend/scripts/seed_demo_traces.py`.
 
 ## Future Roadmap
 
-- Define trace ingestion schemas.
-- Implement backend ingestion endpoints.
-- Persist trace data in MongoDB.
-- Add SDK trace capture and transport.
-- Build dashboard views for traces, spans, prompts, responses, tool calls, and failures.
-- Add rule-based failure detection.
-- Add developer documentation and examples.
+- Add focused backend tests for health, ingestion, retrieval, and failure detection.
+- Improve trace details with richer tool-call inspection and copy actions.
+- Add filtering/search improvements for the traces page.
+- Add SDK helpers for wrapping common agent runs.
+- Publish hosted demo screenshots and a short walkthrough.
+- Collect feedback from first users before adding authentication or team features.
 
 ## Package Documentation
 
 - [Backend](./backend/README.md)
 - [Frontend](./frontend/README.md)
 - [Python SDK](./sdk-python/README.md)
+- [Local Demo](./docs/local-demo.md)
+- [First User Checklist](./docs/first-user-checklist.md)
 
 ## GitHub Topics
 

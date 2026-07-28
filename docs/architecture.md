@@ -4,7 +4,7 @@
 
 The backend is a FastAPI application organized around explicit boundaries:
 
-- `api/`: HTTP route modules. Empty for now because product APIs are intentionally not implemented yet.
+- `api/`: HTTP route modules for health checks and trace resources.
 - `core/`: cross-cutting application concerns such as logging, constants, and error helpers.
 - `database/`: MongoDB client lifecycle and collection access.
 - `models/`: persistence-oriented database models.
@@ -14,17 +14,28 @@ The backend is a FastAPI application organized around explicit boundaries:
 - `config.py`: environment-driven application settings.
 - `main.py`: FastAPI app factory and application lifecycle.
 
+The trace ingestion path is intentionally simple:
+
+```text
+SDK or HTTP client -> FastAPI route -> Pydantic schema -> service -> MongoDB
+```
+
+Failure detection runs in the service layer before the API response is returned. The current rules are deterministic and easy to extend.
+
 ## Frontend
 
-The frontend is a Vite React application using TailwindCSS and React Router. It starts with one placeholder route so the project can compile while the product screens are still being designed.
+The frontend is a Vite React application using TailwindCSS and React Router. It reads traces from the FastAPI backend and renders the dashboard, trace list, trace detail view, and React Flow trace viewer.
 
-Recommended future folders:
+Key folders:
 
 - `src/pages/`: route-level screens.
 - `src/components/`: reusable UI components.
 - `src/lib/`: API clients and shared browser utilities.
-- `src/types/`: TypeScript types shared across views.
 
 ## Python SDK
 
-The SDK is a standalone Python package under `sdk-python/`. It exposes the public package namespace and a placeholder client. Actual telemetry capture should be added after the backend ingestion schema is designed.
+The SDK is a standalone Python package under `sdk-python/`. It exposes `Tracewell`, validates trace payloads with Pydantic, and sends traces to the backend with a small synchronous API for the MVP.
+
+## Local Demo
+
+The repository includes `backend/scripts/seed_demo_traces.py` and [Local Demo](./local-demo.md) so a new user can validate the full product loop without having a real AI agent yet.
