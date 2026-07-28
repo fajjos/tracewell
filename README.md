@@ -4,6 +4,24 @@ Tracewell is an open-source observability platform for AI agents.
 
 The MVP helps developers understand what their agents are doing by collecting traces, prompts, responses, tool calls, latency, token usage, and errors through a lightweight Python SDK.
 
+## Screenshots
+
+### Dashboard
+
+![Tracewell dashboard showing trace metrics, recent traces, and failure signals.](./docs/assets/dashboard.png)
+
+### Trace History
+
+![Tracewell traces page showing project and status filters with trace rows.](./docs/assets/traces.png)
+
+### Trace Viewer
+
+![Tracewell React Flow trace viewer showing user, LLM, tool, and response nodes.](./docs/assets/trace-flow-2.png)
+
+### Trace Details
+
+![Tracewell trace details page showing the trace viewer, metadata, prompt, and response.](./docs/assets/trace-details.png)
+
 ## Vision
 
 AI agents are becoming production software, but debugging them still feels like reading scattered logs. Tracewell aims to give developers a focused, beautiful, local-first observability workflow for agent behavior before adding enterprise complexity.
