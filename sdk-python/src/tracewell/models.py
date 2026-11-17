@@ -33,10 +33,14 @@ class TracePayload(BaseModel):
     provider: str = Field(default="unknown", min_length=1, max_length=64)
     model: str = Field(default="unknown", min_length=1, max_length=128)
     latency_ms: int = Field(ge=0)
-    input_tokens: int = Field(default=0, ge=0)
-    output_tokens: int = Field(default=0, ge=0)
-    total_tokens: int = Field(default=0, ge=0)
-    cost: float = Field(default=0.0, ge=0, allow_inf_nan=False)
+    input_tokens: Optional[int] = Field(default=None, ge=0)
+    output_tokens: Optional[int] = Field(default=None, ge=0)
+    total_tokens: Optional[int] = Field(default=None, ge=0)
+    cost: Optional[float] = Field(default=None, ge=0, allow_inf_nan=False)
+    cost_is_estimated: Optional[bool] = None
+    cost_source: Optional[str] = None
+    usage_source: Optional[str] = None
+    llm_calls: List[Dict[str, object]] = Field(default_factory=list)
     status: TraceStatus = TraceStatus.SUCCESS
     tool_calls: list[TraceToolCall] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -69,8 +73,10 @@ class TracePayload(BaseModel):
 
     @model_validator(mode="after")
     def validate_total_tokens(self) -> "TracePayload":
+        if self.input_tokens is None or self.output_tokens is None:
+            return self
         expected_total = self.input_tokens + self.output_tokens
-        if self.total_tokens == 0 and expected_total > 0:
+        if self.total_tokens is None:
             self.total_tokens = expected_total
             return self
 

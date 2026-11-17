@@ -177,10 +177,10 @@ export function Traces() {
                       {formatLatency(trace.latencyMs)}
                     </td>
                     <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
-                      {formatNumber(trace.totalTokens)}
+                      {trace.totalTokens === null ? "Unknown" : formatNumber(trace.totalTokens)}
                     </td>
                     <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
-                      {formatCurrency(trace.cost)}
+                      {trace.cost === null ? "Unknown" : formatCurrency(trace.cost)}
                     </td>
                     <td className="px-5 py-4 text-slate-600 dark:text-slate-300">
                       {formatDateTime(trace.createdAt)}

@@ -9,6 +9,8 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: "Dashboard", path: "/" },
   { label: "Traces", path: "/traces" },
+  { label: "Evaluations", path: "/evaluations" },
+  { label: "Efficiency Insights", path: "/efficiency" },
 ];
 
 export function Layout() {

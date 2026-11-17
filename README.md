@@ -145,6 +145,7 @@ Current scope:
 - MongoDB stores trace data.
 - Rule-based failure detection flags high latency, high token usage, failed responses, and repeated tool calls.
 - React dashboard displays metrics, recent traces, failures, trace details, and a React Flow trace viewer.
+- Regression testing MVP lets developers create editable evaluations from traces and run deterministic PASS/FAIL checks against later traces.
 - A local demo seed script is available at `backend/scripts/seed_demo_traces.py`.
 
 ## Future Roadmap

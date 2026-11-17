@@ -41,6 +41,9 @@ class MongoClientManager:
             raise
 
         self._client = client
+        database = client[settings.mongodb_database]
+        await database["traces"].create_index([("created_at", -1)])
+        await database["traces"].create_index([("project_id", 1), ("created_at", -1)])
         logger.info(
             "Connected to MongoDB",
             extra={"database": settings.mongodb_database},

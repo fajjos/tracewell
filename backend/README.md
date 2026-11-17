@@ -49,3 +49,50 @@ Create a `.env` file from `.env.example`.
 - `POST /api/v1/traces`
 - `GET /api/v1/traces`
 - `GET /api/v1/traces/{trace_id}`
+- `POST /api/v1/evaluations/from-trace/{trace_id}`
+- `GET /api/v1/evaluations`
+- `GET /api/v1/evaluations/{evaluation_id}`
+- `PATCH /api/v1/evaluations/{evaluation_id}`
+- `POST /api/v1/evaluations/{evaluation_id}/runs`
+- `GET /api/v1/evaluations/{evaluation_id}/runs`
+- `GET /api/v1/evaluation-runs/{run_id}`
+
+## Regression Testing MVP
+
+Evaluations are deterministic regression tests created from stored traces. A developer creates an evaluation from a source trace, optionally edits its assertions, submits a new trace from a later agent run through the existing SDK, then runs the evaluation against that actual trace.
+
+Create an evaluation:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/evaluations/from-trace/{trace_id}
+```
+
+Run an evaluation against a second stored trace:
+
+```powershell
+Invoke-RestMethod -Method Post `
+  -ContentType "application/json" `
+  -Body '{"actual_trace_id":"trace_actual"}' `
+  http://127.0.0.1:8000/api/v1/evaluations/{evaluation_id}/runs
+```
+
+Supported assertion types:
+
+- `response_non_empty`
+- `response_contains`
+- `status_equals`
+- `required_tool_called`
+- `forbidden_tool_not_called`
+- `max_tool_calls`
+- `max_latency_ms`
+- `max_tokens`
+
+## Tests
+
+Run backend tests from the `backend/` directory:
+
+```powershell
+python -m pytest
+```
+
+The evaluation tests use an in-memory fake database and do not require MongoDB credentials.

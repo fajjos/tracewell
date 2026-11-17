@@ -39,7 +39,7 @@ export function Dashboard() {
   const metrics = useMemo(() => {
     const totalTraces = traces.length;
     const failedTraces = traces.filter((trace) => trace.status === "error").length;
-    const totalCost = traces.reduce((sum, trace) => sum + trace.cost, 0);
+    const totalCost = traces.reduce((sum, trace) => sum + (trace.cost ?? 0), 0);
     const averageLatency =
       totalTraces === 0
         ? 0

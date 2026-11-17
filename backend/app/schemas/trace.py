@@ -57,6 +57,36 @@ class TraceToolCall(BaseModel):
         return normalized_value
 
 
+class TraceLLMCall(BaseModel):
+    model: str = Field(min_length=1, max_length=128)
+    provider: str = Field(default="unknown", min_length=1, max_length=64)
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    total_tokens: int | None = Field(default=None, ge=0)
+    latency_ms: int | None = Field(default=None, ge=0)
+    cost: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    cost_source: str | None = None
+    usage_source: str | None = None
+    prompt: str | None = None
+
+    model_config = ConfigDict(extra="allow")
+
+    @model_validator(mode="after")
+    def validate_call_total(self) -> "TraceLLMCall":
+        if self.total_tokens is None and self.input_tokens is not None and self.output_tokens is not None:
+            self.total_tokens = self.input_tokens + self.output_tokens
+        if self.total_tokens is not None and self.input_tokens is not None and self.output_tokens is not None and self.total_tokens != self.input_tokens + self.output_tokens:
+            raise ValueError("total_tokens must equal input_tokens + output_tokens")
+        return self
+
+    @field_validator("usage_source", "cost_source")
+    @classmethod
+    def validate_sources(cls, value: str | None) -> str | None:
+        if value is not None and value not in {"provider", "estimated", "unknown"}:
+            raise ValueError("source must be provider, estimated, or unknown")
+        return value
+
+
 class TraceBase(BaseModel):
     trace_id: str = Field(
         min_length=1,
@@ -82,10 +112,14 @@ class TraceBase(BaseModel):
     )
     model: str = Field(min_length=1, max_length=128, examples=[TRACE_EXAMPLE["model"]])
     latency_ms: int = Field(ge=0, examples=[TRACE_EXAMPLE["latency_ms"]])
-    input_tokens: int = Field(ge=0, examples=[TRACE_EXAMPLE["input_tokens"]])
-    output_tokens: int = Field(ge=0, examples=[TRACE_EXAMPLE["output_tokens"]])
-    total_tokens: int = Field(ge=0, examples=[TRACE_EXAMPLE["total_tokens"]])
-    cost: float = Field(ge=0, allow_inf_nan=False, examples=[TRACE_EXAMPLE["cost"]])
+    input_tokens: int | None = Field(default=None, ge=0, examples=[TRACE_EXAMPLE["input_tokens"]])
+    output_tokens: int | None = Field(default=None, ge=0, examples=[TRACE_EXAMPLE["output_tokens"]])
+    total_tokens: int | None = Field(default=None, ge=0, examples=[TRACE_EXAMPLE["total_tokens"]])
+    cost: float | None = Field(default=None, ge=0, allow_inf_nan=False, examples=[TRACE_EXAMPLE["cost"]])
+    cost_is_estimated: bool | None = None
+    cost_source: str | None = None
+    usage_source: str | None = None
+    llm_calls: list[TraceLLMCall] = Field(default_factory=list)
     status: TraceStatus = Field(examples=[TRACE_EXAMPLE["status"]])
     tool_calls: list[TraceToolCall] = Field(default_factory=list)
     created_at: datetime = Field(
@@ -124,10 +158,38 @@ class TraceBase(BaseModel):
 
     @model_validator(mode="after")
     def validate_total_tokens(self) -> "TraceBase":
-        expected_total = self.input_tokens + self.output_tokens
-        if self.total_tokens != expected_total:
-            raise ValueError("total_tokens must equal input_tokens + output_tokens")
+        if self.input_tokens is not None and self.output_tokens is not None:
+            expected_total = self.input_tokens + self.output_tokens
+            if self.total_tokens is None:
+                self.total_tokens = expected_total
+            elif self.total_tokens != expected_total:
+                raise ValueError("total_tokens must equal input_tokens + output_tokens")
+        elif self.total_tokens is None:
+            return self
+        elif self.input_tokens is None or self.output_tokens is None:
+            return self
+        return self
 
+    @field_validator("usage_source", "cost_source")
+    @classmethod
+    def validate_trace_sources(cls, value: str | None) -> str | None:
+        if value is not None and value not in {"provider", "estimated", "unknown"}:
+            raise ValueError("source must be provider, estimated, or unknown")
+        return value
+
+    @model_validator(mode="after")
+    def aggregate_calls_when_trace_metrics_absent(self) -> "TraceBase":
+        if self.llm_calls:
+            if self.input_tokens is None and all(call.input_tokens is not None for call in self.llm_calls):
+                self.input_tokens = sum(call.input_tokens or 0 for call in self.llm_calls)
+            if self.output_tokens is None and all(call.output_tokens is not None for call in self.llm_calls):
+                self.output_tokens = sum(call.output_tokens or 0 for call in self.llm_calls)
+            if self.total_tokens is None and all(call.total_tokens is not None for call in self.llm_calls):
+                self.total_tokens = sum(call.total_tokens or 0 for call in self.llm_calls)
+            if self.input_tokens is not None and self.output_tokens is not None and self.total_tokens is None:
+                self.total_tokens = self.input_tokens + self.output_tokens
+            if self.cost is None and all(call.cost is not None for call in self.llm_calls):
+                self.cost = sum(call.cost or 0 for call in self.llm_calls)
         return self
 
 
@@ -163,6 +225,8 @@ class TraceResponse(TraceBase):
         extra="forbid",
         json_schema_extra={"examples": [TRACE_EXAMPLE]},
     )
+
+
 
 
 class TraceListResponse(BaseModel):

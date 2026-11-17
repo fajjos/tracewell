@@ -5,7 +5,10 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.evaluations import router as evaluations_router
+from app.api.evaluations import runs_router as evaluation_runs_router
 from app.api.health import router as health_router
+from app.api.efficiency import router as efficiency_router
 from app.api.traces import router as traces_router
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
@@ -47,6 +50,9 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health_router)
     app.include_router(traces_router, prefix=settings.api_prefix)
+    app.include_router(efficiency_router, prefix=settings.api_prefix)
+    app.include_router(evaluations_router, prefix=settings.api_prefix)
+    app.include_router(evaluation_runs_router, prefix=settings.api_prefix)
 
     return app
 

@@ -5,7 +5,13 @@ import { ErrorState } from "../components/ErrorState";
 import { LoadingState } from "../components/LoadingState";
 import { StatusBadge } from "../components/StatusBadge";
 import { TraceFlowViewer } from "../components/TraceFlowViewer";
-import { fetchTrace, getErrorMessage, type Trace } from "../lib/api";
+import {
+  createEvaluationFromTrace,
+  fetchTraceEfficiency,
+  fetchTrace,
+  getErrorMessage,
+  type Trace,
+} from "../lib/api";
 import {
   formatCurrency,
   formatDateTime,
@@ -17,7 +23,9 @@ export function TraceDetails() {
   const { traceId } = useParams<{ traceId: string }>();
   const [trace, setTrace] = useState<Trace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingEvaluation, setIsCreatingEvaluation] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [efficiency, setEfficiency] = useState<{ llm_calls: Array<Record<string, unknown>>; tool_calls: Array<Record<string, unknown>> } | null>(null);
 
   const loadTrace = useCallback(async () => {
     if (!traceId) {
@@ -31,6 +39,7 @@ export function TraceDetails() {
 
     try {
       setTrace(await fetchTrace(traceId));
+      setEfficiency(await fetchTraceEfficiency(traceId));
     } catch (error) {
       setTrace(null);
       setErrorMessage(getErrorMessage(error));
@@ -45,6 +54,23 @@ export function TraceDetails() {
 
   if (isLoading) {
     return <LoadingState label="Loading trace details" />;
+  }
+
+  async function handleCreateEvaluation() {
+    if (!trace) {
+      return;
+    }
+
+    setIsCreatingEvaluation(true);
+    setErrorMessage(null);
+    try {
+      const evaluation = await createEvaluationFromTrace(trace.traceId);
+      window.location.href = `/evaluations/${evaluation.evaluationId}/edit`;
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    } finally {
+      setIsCreatingEvaluation(false);
+    }
   }
 
   if (errorMessage || !trace) {
@@ -75,10 +101,10 @@ export function TraceDetails() {
 
   const metrics = [
     ["Latency", formatLatency(trace.latencyMs)],
-    ["Input tokens", formatNumber(trace.inputTokens)],
-    ["Output tokens", formatNumber(trace.outputTokens)],
-    ["Total tokens", formatNumber(trace.totalTokens)],
-    ["Cost", formatCurrency(trace.cost)],
+    ["Input tokens", trace.inputTokens === null ? "Unknown" : formatNumber(trace.inputTokens)],
+    ["Output tokens", trace.outputTokens === null ? "Unknown" : formatNumber(trace.outputTokens)],
+    ["Total tokens", trace.totalTokens === null ? "Unknown" : formatNumber(trace.totalTokens)],
+    ["Cost", trace.cost === null ? "Unknown" : formatCurrency(trace.cost)],
   ];
 
   return (
@@ -96,6 +122,14 @@ export function TraceDetails() {
           </h1>
         </div>
         <StatusBadge status={trace.status} />
+        <button
+          type="button"
+          onClick={handleCreateEvaluation}
+          disabled={isCreatingEvaluation}
+          className="inline-flex w-fit rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+        >
+          {isCreatingEvaluation ? "Creating..." : "Create Regression Test"}
+        </button>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -111,6 +145,7 @@ export function TraceDetails() {
       </section>
 
       <TraceFlowViewer trace={trace} />
+      {efficiency && (efficiency.llm_calls.length > 0 || efficiency.tool_calls.length > 0) ? <section className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"><h2 className="text-base font-semibold">Efficiency details</h2><div className="mt-4 space-y-3">{efficiency.llm_calls.map((call, index) => <div key={index} className="rounded border border-slate-100 p-3 text-sm dark:border-slate-800"><div className="font-medium">{String(call.provider)} / {String(call.model)}</div><div className="mt-1 text-slate-500">Tokens: {String(call.total_tokens ?? "Unknown")} · Cost: {call.cost == null ? "Unknown" : formatCurrency(Number(call.cost))} · Latency: {call.latency_ms == null ? "Unknown" : formatLatency(Number(call.latency_ms))}</div><div className="mt-1 text-xs text-slate-500">Usage: {String(call.usage_source ?? "Unknown")} · Cost: {String(call.cost_source ?? "Unknown")}</div></div>)}<div className="text-sm text-slate-500">Tool invocations: {efficiency.tool_calls.map((call) => String(call.name)).join(", ") || "None recorded"}</div></div></section> : null}
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1.4fr]">
         <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">

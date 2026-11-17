@@ -4,8 +4,13 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { App } from "./App";
 import { Dashboard } from "./pages/Dashboard";
+import { EvaluationDetails } from "./pages/EvaluationDetails";
+import { EvaluationEdit } from "./pages/EvaluationEdit";
+import { EvaluationRunDetails } from "./pages/EvaluationRunDetails";
+import { Evaluations } from "./pages/Evaluations";
 import { TraceDetails } from "./pages/TraceDetails";
 import { Traces } from "./pages/Traces";
+import { EfficiencyInsights } from "./pages/EfficiencyInsights";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 
@@ -25,6 +30,23 @@ const router = createBrowserRouter([
       {
         path: "traces/:traceId",
         element: <TraceDetails />,
+      },
+      { path: "efficiency", element: <EfficiencyInsights /> },
+      {
+        path: "evaluations",
+        element: <Evaluations />,
+      },
+      {
+        path: "evaluations/:evaluationId",
+        element: <EvaluationDetails />,
+      },
+      {
+        path: "evaluations/:evaluationId/edit",
+        element: <EvaluationEdit />,
+      },
+      {
+        path: "evaluation-runs/:runId",
+        element: <EvaluationRunDetails />,
       },
     ],
   },
